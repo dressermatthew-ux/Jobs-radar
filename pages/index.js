@@ -47,11 +47,11 @@ export default function JobRadar() {
         const data = await res.json();
         const scored = (data.jobs || []).map((j, idx) => ({
           ...j,
-          id: `${company}-${idx}`,
+          id: company + "-" + idx,
           score: scoreJob(j.title || "", j.snippet || "")
         }));
         setResults(prev => [...prev, ...scored]);
-      } catch (e) { /* skip */ }
+      } catch (e) {}
     }
 
     setProgress(100);
@@ -92,7 +92,125 @@ export default function JobRadar() {
             <div style={{ fontSize: 11, color: "#666", marginTop: 4, letterSpacing: "0.12em" }}>MATTHEW DRESSER · OPS / PM / STRATEGY · BOSTON + REMOTE</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <button className="btn" onClick={runScan} disabled={loading} style={{ background: loading ? "#1a1a24" : "#e8e4d9", color: loading ? "#666" : "#0a0a0f", border: "none", padding: "10px 22px", fontSize: 12, letterSpacing: "0.1em", fontWeight: 600, borderRadius: 4 }}>
-              {loading ? `SCANNING... ${progress}%` : "▶ RUN SCAN"}
+            <button
+              className="btn"
+              onClick={runScan}
+              disabled={loading}
+              style={{ background: loading ? "#1a1a24" : "#e8e4d9", color: loading ? "#666" : "#0a0a0f", border: "none", padding: "10px 22px", fontSize: 12, letterSpacing: "0.1em", fontWeight: 600, borderRadius: 4 }}
+            >
+              {loading ? "SCANNING... " + progress + "%" : "RUN SCAN"}
             </button>
-            {lastScanned && !loading && <div style={{ fo
+            {lastScanned && !loading && (
+              <div style={{ fontSize: 10, color: "#555", marginTop: 6 }}>Last scan: {lastScanned.toLocaleTimeString()}</div>
+            )}
+          </div>
+        </div>
+        {loading && (
+          <div style={{ maxWidth: 900, margin: "16px auto 0" }}>
+            <div style={{ height: 2, background: "#1e1e2a", borderRadius: 1, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: progress + "%", background: "#e8e4d9", transition: "width 0.3s" }} />
+            </div>
+            <div style={{ fontSize: 10, color: "#555", marginTop: 6, letterSpacing: "0.1em" }}>
+              SCANNING {scanning ? scanning.toUpperCase() : ""}
+              <span className="blink">_</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 32px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+          {COMPANIES.map(c => (
+            <div key={c} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", background: "#0d0d14", border: "1px solid #1e1e2a", borderRadius: 3 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS[c] || "#666", display: "inline-block" }} />
+              <span style={{ fontSize: 10, color: "#aaa", letterSpacing: "0.08em" }}>{c.toUpperCase()}</span>
+            </div>
+          ))}
+        </div>
+
+        {results.length > 0 && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {["all", "boston", "remote", "saved"].map(f => (
+              <button
+                key={f}
+                className="btn"
+                onClick={() => setFilter(f)}
+                style={{ background: filter === f ? "#e8e4d9" : "transparent", color: filter === f ? "#0a0a0f" : "#666", border: "1px solid " + (filter === f ? "#e8e4d9" : "#1e1e2a"), padding: "5px 14px", fontSize: 11, letterSpacing: "0.1em", borderRadius: 3 }}
+              >
+                {f.toUpperCase()}{f === "all" ? " (" + results.filter(j => !hidden.includes(j.id)).length + ")" : f === "saved" ? " (" + saved.length + ")" : ""}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!loading && results.length === 0 && (
+          <div style={{ textAlign: "center", padding: "80px 0", color: "#333" }}>
+            <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: "0.1em", marginBottom: 12 }}>READY</div>
+            <div style={{ fontSize: 12, letterSpacing: "0.1em" }}>HIT RUN SCAN TO CHECK ALL 11 COMPANIES</div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {visible.map(job => (
+            <div key={job.id} className="card fade" style={{ background: "#0d0d14", borderRadius: 6, padding: "18px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS[job.company] || "#666", display: "inline-block", flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, color: "#666", letterSpacing: "0.1em" }}>{job.company ? job.company.toUpperCase() : ""}</span>
+                    {job.location && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", background: "#1a1a24", color: "#888", borderRadius: 3 }}>{job.location}</span>
+                    )}
+                    {job.score >= 4 && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", background: "#1a2410", color: "#5a9a3a", borderRadius: 3 }}>STRONG MATCH</span>
+                    )}
+                    {job.score >= 2 && job.score < 4 && (
+                      <span style={{ fontSize: 10, padding: "2px 8px", background: "#1a1810", color: "#8a7a3a", borderRadius: 3 }}>POSSIBLE FIT</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#e8e4d9", marginBottom: 6 }}>{job.title}</div>
+                  {job.snippet && (
+                    <div style={{ fontSize: 11, color: "#666", lineHeight: 1.6 }}>
+                      {job.snippet.slice(0, 200)}{job.snippet.length > 200 ? "..." : ""}
+                    </div>
+                  )}
+                  {job.posted && (
+                    <div style={{ fontSize: 10, color: "#444", marginTop: 6, letterSpacing: "0.06em" }}>POSTED: {job.posted}</div>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                  {job.url && (
+                    <a href={job.url} target="_blank" rel="noopener noreferrer" style={{ background: "#e8e4d9", color: "#0a0a0f", padding: "6px 14px", fontSize: 10, letterSpacing: "0.1em", borderRadius: 3, textAlign: "center", fontWeight: 600, fontFamily: "monospace" }}>
+                      APPLY
+                    </a>
+                  )}
+                  <button
+                    className="btn"
+                    onClick={() => setSaved(p => p.includes(job.id) ? p.filter(x => x !== job.id) : [...p, job.id])}
+                    style={{ background: saved.includes(job.id) ? "#1a2410" : "transparent", color: saved.includes(job.id) ? "#5a9a3a" : "#444", border: "1px solid " + (saved.includes(job.id) ? "#2a3a1a" : "#1e1e2a"), padding: "6px 14px", fontSize: 10, letterSpacing: "0.1em", borderRadius: 3 }}
+                  >
+                    {saved.includes(job.id) ? "SAVED" : "SAVE"}
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => setHidden(p => [...p, job.id])}
+                    style={{ background: "transparent", color: "#333", border: "1px solid #1a1a1a", padding: "6px 14px", fontSize: 10, letterSpacing: "0.1em", borderRadius: 3 }}
+                  >
+                    HIDE
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {results.length > 0 && !loading && (
+          <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #1e1e2a", fontSize: 10, color: "#333", letterSpacing: "0.1em", display: "flex", justifyContent: "space-between" }}>
+            <span>{visible.length} ROLES SHOWN · {hidden.length} HIDDEN</span>
+            <span>RUN SCAN AGAIN TO REFRESH</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
