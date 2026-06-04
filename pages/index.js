@@ -41,26 +41,24 @@ const INDUSTRY_COMPANIES = {
   "CPG / Apparel": [
     { name: "LEGO", domain: "lego.com" },
     { name: "New Balance", domain: "newbalance.com" },
-    { name: "Converse Nike", domain: "converse.com" },
+    { name: "Converse", domain: "converse.com" },
+    { name: "Nike", domain: "nike.com" },
     { name: "Reebok", domain: "reebok.com" },
     { name: "Hasbro", domain: "hasbro.com" },
-    { name: "PTC", domain: "ptc.com" },
   ],
   "Food & Hospitality": [
     { name: "Toast", domain: "toasttab.com" },
     { name: "Dunkin", domain: "dunkindonuts.com" },
     { name: "Aramark", domain: "aramark.com" },
-    { name: "Drizly", domain: "drizly.com" },
   ],
   "Healthcare / Biotech": [
     { name: "Mass General Brigham", domain: "massgeneralbrigham.org" },
     { name: "Biogen", domain: "biogen.com" },
     { name: "Moderna", domain: "moderna.com" },
     { name: "Veeva", domain: "veeva.com" },
-    { name: "Tempus", domain: "tempus.com" },
     { name: "Hologic", domain: "hologic.com" },
   ],
-  "Consulting / Professional Services": [
+  "Consulting": [
     { name: "Bain", domain: "bain.com" },
     { name: "BCG", domain: "bcg.com" },
     { name: "Accenture", domain: "accenture.com" },
@@ -88,6 +86,25 @@ function scoreJob(title, snippet) {
   return KEYWORDS.filter(kw => text.includes(kw)).length;
 }
 
+function CompanyLogo({ domain, size = 18 }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) return (
+    <div style={{ width: size, height: size, borderRadius: 4, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.55, color: "#999", flexShrink: 0 }}>
+      {domain[0].toUpperCase()}
+    </div>
+  );
+  return (
+    <img
+      src={"https://www.google.com/s2/favicons?domain=" + domain + "&sz=64"}
+      alt={domain}
+      width={size}
+      height={size}
+      style={{ borderRadius: 4, objectFit: "contain", flexShrink: 0 }}
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 export default function JobRadar() {
   const defaultCompanies = [
     { name: "LEGO", domain: "lego.com" },
@@ -99,14 +116,14 @@ export default function JobRadar() {
     { name: "Datadog", domain: "datadoghq.com" },
     { name: "Toast", domain: "toasttab.com" },
     { name: "New Balance", domain: "newbalance.com" },
-    { name: "Converse Nike", domain: "converse.com" },
+    { name: "Converse", domain: "converse.com" },
     { name: "Chewy", domain: "chewy.com" },
   ];
 
   const [myCompanies, setMyCompanies] = useState(defaultCompanies);
   const [companySearch, setCompanySearch] = useState("");
   const [expandedIndustry, setExpandedIndustry] = useState(null);
-  const [myJobTypes, setMyJobTypes] = useState(["Operations Analyst","Business Analyst","Program Manager","Supply Chain Analyst","Strategy & Operations"]);
+  const [myJobTypes, setMyJobTypes] = useState(["Operations Analyst", "Business Analyst", "Program Manager", "Supply Chain Analyst", "Strategy & Operations"]);
   const [jobTypeInput, setJobTypeInput] = useState("");
   const [activeLevel, setActiveLevel] = useState(["Entry-level", "Mid-level"]);
   const [activeLocation, setActiveLocation] = useState("Both");
@@ -168,7 +185,9 @@ export default function JobRadar() {
         });
         const data = await res.json();
         const scored = (data.jobs || []).map((j, idx) => ({
-          ...j, id: company.name + "-" + idx, domain: company.domain,
+          ...j,
+          id: company.name + "-" + idx,
+          domain: company.domain,
           score: scoreJob(j.title || "", j.snippet || "")
         }));
         setResults(prev => [...prev, ...scored]);
@@ -194,15 +213,9 @@ export default function JobRadar() {
 
   const strongMatches = results.filter(j => j.score >= 4).length;
   const totalVisible = results.filter(j => !hidden.includes(j.id)).length;
-
-  const filteredPresets = PRESET_JOB_TYPES.filter(j =>
-    !myJobTypes.includes(j) && j.toLowerCase().includes(jobTypeInput.toLowerCase())
-  );
-
+  const filteredPresets = PRESET_JOB_TYPES.filter(j => !myJobTypes.includes(j) && j.toLowerCase().includes(jobTypeInput.toLowerCase()));
   const allIndustryCompanies = Object.values(INDUSTRY_COMPANIES).flat();
-  const filteredIndustryCompanies = companySearch
-    ? allIndustryCompanies.filter(c => c.name.toLowerCase().includes(companySearch.toLowerCase()))
-    : null;
+  const filteredIndustryCompanies = companySearch ? allIndustryCompanies.filter(c => c.name.toLowerCase().includes(companySearch.toLowerCase())) : null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f5f3", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#1a1a1a" }}>
@@ -261,8 +274,6 @@ export default function JobRadar() {
         {/* Sidebar */}
         <div style={{ width: 280, flexShrink: 0, padding: "24px 0", marginRight: 28 }}>
           <div style={{ background: "white", border: "1px solid #e8e8e8", borderRadius: 14, overflow: "hidden", position: "sticky", top: 72 }}>
-
-            {/* Scan button */}
             <div style={{ padding: "20px 20px 0" }}>
               <button className="scan-btn" onClick={runScan} disabled={loading}>
                 {loading ? "Scanning " + progress + "%" : "▶ Run Scan"}
@@ -279,7 +290,6 @@ export default function JobRadar() {
               )}
             </div>
 
-            {/* Tabs */}
             <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", marginTop: 16 }}>
               {["companies", "roles", "filters"].map(t => (
                 <button key={t} className={"tab-btn" + (activeTab === t ? " active" : "")} onClick={() => setActiveTab(t)}>
@@ -288,7 +298,7 @@ export default function JobRadar() {
               ))}
             </div>
 
-            <div style={{ padding: "16px 20px", maxHeight: 520, overflowY: "auto" }}>
+            <div style={{ padding: "16px 20px", maxHeight: 560, overflowY: "auto" }}>
 
               {/* COMPANIES TAB */}
               {activeTab === "companies" && (
@@ -297,7 +307,7 @@ export default function JobRadar() {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                     {myCompanies.map(c => (
                       <div key={c.name} className="chip">
-                        <img src={"https://logo.clearbit.com/" + c.domain} width={14} height={14} style={{ borderRadius: 3 }} onError={e => e.target.style.display = "none"} />
+                        <CompanyLogo domain={c.domain} size={14} />
                         {c.name}
                         <span className="chip-x" onClick={() => removeCompany(c.name)}>×</span>
                       </div>
@@ -306,32 +316,22 @@ export default function JobRadar() {
 
                   <div className="sidebar-label">ADD COMPANIES</div>
                   <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-                    <input
-                      className="input-box"
-                      placeholder="Search or add any company..."
-                      value={companySearch}
-                      onChange={e => setCompanySearch(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && addCustomCompany()}
-                    />
+                    <input className="input-box" placeholder="Search or type any company..." value={companySearch} onChange={e => setCompanySearch(e.target.value)} onKeyDown={e => e.key === "Enter" && addCustomCompany()} />
                     <button className="add-btn" onClick={addCustomCompany}>Add</button>
                   </div>
 
-                  {/* Search results */}
                   {companySearch && filteredIndustryCompanies && (
                     <div style={{ marginBottom: 16 }}>
                       {filteredIndustryCompanies.slice(0, 6).map(c => (
                         <div key={c.name} className="company-item" onClick={() => addCompany(c)}>
-                          {myCompanies.find(x => x.name === c.name)
-                            ? <div className="added-circle">✓</div>
-                            : <div className="add-circle">+</div>}
-                          <img src={"https://logo.clearbit.com/" + c.domain} width={18} height={18} style={{ borderRadius: 4 }} onError={e => e.target.style.display = "none"} />
+                          {myCompanies.find(x => x.name === c.name) ? <div className="added-circle">✓</div> : <div className="add-circle">+</div>}
+                          <CompanyLogo domain={c.domain} size={18} />
                           <span style={{ fontSize: 13 }}>{c.name}</span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {/* Industry browse */}
                   {!companySearch && (
                     <div>
                       <div className="sidebar-label">BROWSE BY INDUSTRY</div>
@@ -345,10 +345,8 @@ export default function JobRadar() {
                             <div style={{ paddingBottom: 8 }}>
                               {companies.map(c => (
                                 <div key={c.name} className="company-item" onClick={() => addCompany(c)}>
-                                  {myCompanies.find(x => x.name === c.name)
-                                    ? <div className="added-circle">✓</div>
-                                    : <div className="add-circle">+</div>}
-                                  <img src={"https://logo.clearbit.com/" + c.domain} width={18} height={18} style={{ borderRadius: 4 }} onError={e => e.target.style.display = "none"} />
+                                  {myCompanies.find(x => x.name === c.name) ? <div className="added-circle">✓</div> : <div className="add-circle">+</div>}
+                                  <CompanyLogo domain={c.domain} size={18} />
                                   <span style={{ fontSize: 13 }}>{c.name}</span>
                                 </div>
                               ))}
@@ -376,13 +374,7 @@ export default function JobRadar() {
 
                   <div className="sidebar-label">ADD CUSTOM TITLE</div>
                   <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-                    <input
-                      className="input-box"
-                      placeholder="e.g. Chief of Staff..."
-                      value={jobTypeInput}
-                      onChange={e => setJobTypeInput(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && addCustomJobType()}
-                    />
+                    <input className="input-box" placeholder="e.g. Chief of Staff..." value={jobTypeInput} onChange={e => setJobTypeInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addCustomJobType()} />
                     <button className="add-btn" onClick={addCustomJobType}>Add</button>
                   </div>
 
@@ -401,7 +393,7 @@ export default function JobRadar() {
               {/* FILTERS TAB */}
               {activeTab === "filters" && (
                 <div>
-                  <div className="sidebar-label" style={{ marginBottom: 12 }}>EXPERIENCE LEVEL</div>
+                  <div className="sidebar-label">EXPERIENCE LEVEL</div>
                   {LEVELS.map(l => (
                     <div key={l} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", cursor: "pointer" }} onClick={() => toggleLevel(l)}>
                       <div style={{ width: 16, height: 16, borderRadius: 4, border: "1.5px solid " + (activeLevel.includes(l) ? "#1a1a1a" : "#ddd"), background: activeLevel.includes(l) ? "#1a1a1a" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -413,7 +405,7 @@ export default function JobRadar() {
 
                   <div style={{ borderTop: "1px solid #f0f0f0", margin: "20px 0" }} />
 
-                  <div className="sidebar-label" style={{ marginBottom: 12 }}>LOCATION</div>
+                  <div className="sidebar-label">LOCATION</div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {LOCATIONS.map(l => (
                       <button key={l} className={"loc-btn" + (activeLocation === l ? " on" : "")} onClick={() => setActiveLocation(l)}>{l}</button>
@@ -421,15 +413,12 @@ export default function JobRadar() {
                   </div>
                 </div>
               )}
-
             </div>
           </div>
         </div>
 
         {/* Main content */}
         <div style={{ flex: 1, padding: "24px 0" }}>
-
-          {/* Stats */}
           {results.length > 0 && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
               {[
@@ -446,7 +435,6 @@ export default function JobRadar() {
             </div>
           )}
 
-          {/* Result filters */}
           {results.length > 0 && (
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               {["all", "boston", "remote", "saved"].map(f => (
@@ -458,7 +446,6 @@ export default function JobRadar() {
             </div>
           )}
 
-          {/* Empty state */}
           {!loading && results.length === 0 && (
             <div style={{ textAlign: "center", padding: "100px 0" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>🎯</div>
@@ -468,13 +455,12 @@ export default function JobRadar() {
             </div>
           )}
 
-          {/* Job cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {visible.map(job => (
               <div key={job.id} className="card fade" style={{ padding: "20px 24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
                   <div style={{ display: "flex", gap: 14, flex: 1 }}>
-                    <img src={"https://logo.clearbit.com/" + job.domain} alt={job.company} width={40} height={40} style={{ borderRadius: 8, objectFit: "contain", flexShrink: 0, marginTop: 2, background: "#f8f8f6" }} onError={e => e.target.style.display = "none"} />
+                    <CompanyLogo domain={job.domain} size={40} />
                     <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: "#999" }}>{job.company}</span>
