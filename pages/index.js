@@ -81,6 +81,8 @@ const LEVELS = ["Entry-level", "Mid-level", "Senior"];
 const LOCATIONS = ["Boston", "Remote", "Both"];
 const KEYWORDS = ["operations","analyst","program manager","project manager","supply chain","strategy","bizops","business operations","planning","process","sql","excel","stakeholder","workflow","metrics"];
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 function scoreJob(title, snippet) {
   const text = (title + " " + snippet).toLowerCase();
   return KEYWORDS.filter(kw => text.includes(kw)).length;
@@ -193,6 +195,8 @@ export default function JobRadar() {
         setResults(prev => [...prev, ...scored]);
         setScannedCount(i + 1);
       } catch (e) {}
+      // 3 second delay between requests to avoid Gemini rate limiting
+      await sleep(3000);
     }
 
     setProgress(100);
@@ -258,7 +262,6 @@ export default function JobRadar() {
         ::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
       `}</style>
 
-      {/* Top nav */}
       <div style={{ background: "white", borderBottom: "1px solid #e8e8e8", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 100 }}>
         <div>
           <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>Job Radar</span>
@@ -271,7 +274,6 @@ export default function JobRadar() {
 
       <div style={{ display: "flex", maxWidth: 1240, margin: "0 auto", padding: "0 24px" }}>
 
-        {/* Sidebar */}
         <div style={{ width: 280, flexShrink: 0, padding: "24px 0", marginRight: 28 }}>
           <div style={{ background: "white", border: "1px solid #e8e8e8", borderRadius: 14, overflow: "hidden", position: "sticky", top: 72 }}>
             <div style={{ padding: "20px 20px 0" }}>
@@ -299,8 +301,6 @@ export default function JobRadar() {
             </div>
 
             <div style={{ padding: "16px 20px", maxHeight: 560, overflowY: "auto" }}>
-
-              {/* COMPANIES TAB */}
               {activeTab === "companies" && (
                 <div>
                   <div className="sidebar-label">MY COMPANIES ({myCompanies.length})</div>
@@ -359,7 +359,6 @@ export default function JobRadar() {
                 </div>
               )}
 
-              {/* ROLES TAB */}
               {activeTab === "roles" && (
                 <div>
                   <div className="sidebar-label">MY JOB TYPES ({myJobTypes.length})</div>
@@ -390,7 +389,6 @@ export default function JobRadar() {
                 </div>
               )}
 
-              {/* FILTERS TAB */}
               {activeTab === "filters" && (
                 <div>
                   <div className="sidebar-label">EXPERIENCE LEVEL</div>
@@ -402,9 +400,7 @@ export default function JobRadar() {
                       <span style={{ fontSize: 13 }}>{l}</span>
                     </div>
                   ))}
-
                   <div style={{ borderTop: "1px solid #f0f0f0", margin: "20px 0" }} />
-
                   <div className="sidebar-label">LOCATION</div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {LOCATIONS.map(l => (
@@ -417,7 +413,6 @@ export default function JobRadar() {
           </div>
         </div>
 
-        {/* Main content */}
         <div style={{ flex: 1, padding: "24px 0" }}>
           {results.length > 0 && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
