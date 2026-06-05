@@ -1,11 +1,8 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { company, jobTypes, levels, location } = req.body;
-
+  const { company, location } = req.body;
   const locationText = location === "Both" ? "Boston MA or Remote" : location === "Boston" ? "Boston MA" : "Remote";
-  const levelText = (levels || []).join(", ");
-  const jobText = (jobTypes || []).join(", ");
 
   try {
     const response = await fetch(
@@ -17,12 +14,14 @@ export default async function handler(req, res) {
           tools: [{ google_search: {} }],
           contents: [{
             parts: [{
-              text: `Search Google for current job openings at ${company} right now in ${locationText} for these roles: ${jobText}. Experience level: ${levelText}.
+              text: `Search for ALL current entry-level and mid-level job openings at ${company} in ${locationText}. Include every type of role — operations, analyst, coordinator, associate, specialist, manager, supply chain, finance, marketing, data, product, strategy, project manager, program manager, business analyst, or any other entry or mid-level position posted recently.
 
-Find real job postings and return them as a JSON array. Use this exact format with no markdown, no code blocks, just raw JSON:
-[{"title":"Job Title Here","company":"${company}","location":"City or Remote","url":"https://actual-job-url.com","snippet":"Brief job description","posted":"Date or time ago"}]
+Search: "${company} entry level mid level jobs ${locationText} ${new Date().getFullYear()} site:${company.toLowerCase().replace(/\s+/g,"")}.com OR site:linkedin.com OR site:indeed.com OR site:greenhouse.io OR site:lever.co"
 
-Search for "${company} jobs ${locationText} ${new Date().getFullYear()}" to find current openings. Return at least 1-3 jobs if any exist. If truly none exist return []`
+Return ONLY a raw JSON array with no markdown, no code blocks, no explanation:
+[{"title":"Job Title","company":"${company}","location":"City or Remote","url":"https://direct-job-url.com","snippet":"Brief description of the role","posted":"Date posted"}]
+
+Return as many matching jobs as you can find, up to 10. If none found return []`
             }]
           }]
         })
@@ -30,40 +29,24 @@ Search for "${company} jobs ${locationText} ${new Date().getFullYear()}" to find
     );
 
     const data = await response.json();
-    
-    // Log for debugging
-    console.log("Gemini response for", company, JSON.stringify(data).slice(0, 500));
 
     if (!data.candidates || !data.candidates[0]) {
-      console.log("No candidates in response:", JSON.stringify(data));
-      return res.status(200).json({ jobs: [], debug: "no candidates" });
+      return res.status(200).json({ jobs: [], debug: "no candidates", raw: JSON.stringify(data).slice(0, 300) });
     }
 
     const parts = data.candidates[0]?.content?.parts || [];
     const textPart = parts.find(p => p.text);
-    
-    if (!textPart) {
-      return res.status(200).json({ jobs: [], debug: "no text part" });
-    }
+    if (!textPart) return res.status(200).json({ jobs: [], debug: "no text part" });
 
     const text = textPart.text;
-    console.log("Text from Gemini for", company, ":", text.slice(0, 300));
-
-    // Try to extract JSON array
     const start = text.indexOf("[");
     const end = text.lastIndexOf("]");
-    
-    if (start === -1 || end === -1) {
-      return res.status(200).json({ jobs: [], debug: "no json array found", raw: text.slice(0, 200) });
-    }
+    if (start === -1 || end === -1) return res.status(200).json({ jobs: [], debug: "no json array", raw: text.slice(0, 300) });
 
-    const jsonStr = text.slice(start, end + 1);
-    const jobs = JSON.parse(jsonStr);
-    
+    const jobs = JSON.parse(text.slice(start, end + 1));
     return res.status(200).json({ jobs });
 
   } catch (err) {
-    console.error("Error for", company, err);
     return res.status(200).json({ jobs: [], error: err.message });
   }
 }
