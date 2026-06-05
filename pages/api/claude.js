@@ -1,8 +1,7 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { company, location } = req.body;
-  const locationText = location === "Both" ? "Boston MA or Remote" : location === "Boston" ? "Boston MA" : "Remote";
+  const { company } = req.body;
 
   try {
     const response = await fetch(
@@ -14,14 +13,14 @@ export default async function handler(req, res) {
           tools: [{ google_search: {} }],
           contents: [{
             parts: [{
-              text: `Search for ALL current entry-level and mid-level job openings at ${company} in ${locationText}. Include every type of role — operations, analyst, coordinator, associate, specialist, manager, supply chain, finance, marketing, data, product, strategy, project manager, program manager, business analyst, or any other entry or mid-level position posted recently.
+              text: `Search for ALL current job openings at ${company} that are located in Boston MA, near Boston MA, Massachusetts, or Remote. Include every type of role at any level — do not filter by job type or seniority. Find as many real current postings as possible.
 
-Search: "${company} entry level mid level jobs ${locationText} ${new Date().getFullYear()} site:${company.toLowerCase().replace(/\s+/g,"")}.com OR site:linkedin.com OR site:indeed.com OR site:greenhouse.io OR site:lever.co"
+Search now for: "${company} jobs Boston Massachusetts remote 2026"
 
-Return ONLY a raw JSON array with no markdown, no code blocks, no explanation:
-[{"title":"Job Title","company":"${company}","location":"City or Remote","url":"https://direct-job-url.com","snippet":"Brief description of the role","posted":"Date posted"}]
+Return ONLY a raw JSON array, absolutely no markdown, no code fences, no explanation, just the array:
+[{"title":"Exact Job Title","company":"${company}","location":"City State or Remote","url":"https://actual-application-url.com","snippet":"What the role involves","posted":"When it was posted"}]
 
-Return as many matching jobs as you can find, up to 10. If none found return []`
+Return up to 10 jobs. If truly none found in Boston or Remote return []`
             }]
           }]
         })
