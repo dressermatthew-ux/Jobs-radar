@@ -86,7 +86,7 @@ export default function JobRadar() {
         setResults(prev => [...prev, ...scored]);
         setScannedCount(i + 1);
       } catch (e) {}
-      await sleep(1000);
+      await sleep(1500);
     }
 
     setProgress(100);
