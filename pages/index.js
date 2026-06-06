@@ -30,6 +30,16 @@ function scoreJob(title, snippet) {
   return KEYWORDS.filter(kw => text.includes(kw)).length;
 }
 
+const parseDate = (str) => {
+  if (!str) return 0;
+  const s = str.toLowerCase();
+  if (s.includes("hour") || s.includes("just")) return Date.now();
+  if (s.includes("day")) return Date.now() - (parseInt(s) || 1) * 86400000;
+  if (s.includes("week")) return Date.now() - (parseInt(s) || 1) * 604800000;
+  if (s.includes("month")) return Date.now() - (parseInt(s) || 1) * 2592000000;
+  return 0;
+};
+
 function CompanyLogo({ domain, size = 18 }) {
   const [errored, setErrored] = useState(false);
   if (errored) return (
@@ -103,7 +113,7 @@ export default function JobRadar() {
       if (filter === "remote") return (j.location || "").toLowerCase().includes("remote");
       return true;
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => parseDate(b.posted) - parseDate(a.posted));
 
   const strongMatches = results.filter(j => j.score >= 4).length;
   const totalVisible = results.filter(j => !hidden.includes(j.id)).length;
@@ -113,156 +123,80 @@ export default function JobRadar() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         a { text-decoration: none; }
-
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 50% { opacity: 0; } }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
         @keyframes pulse {
           0%, 100% { opacity: 0.4; transform: scale(1); }
           50% { opacity: 0.7; transform: scale(1.05); }
         }
-
         .animated-bg {
-          position: fixed;
-          inset: 0;
+          position: fixed; inset: 0;
           background: linear-gradient(-45deg, #0a0a0f, #0d1117, #0f0a1a, #0a0f1a, #110a1a, #0a1a0f);
           background-size: 400% 400%;
           animation: gradientShift 15s ease infinite;
           z-index: 0;
         }
-
         .orb {
-          position: fixed;
-          border-radius: 50%;
-          filter: blur(80px);
-          animation: pulse 8s ease-in-out infinite;
-          z-index: 0;
-          pointer-events: none;
+          position: fixed; border-radius: 50%; filter: blur(80px);
+          animation: pulse 8s ease-in-out infinite; z-index: 0; pointer-events: none;
         }
-
         .glass {
-          background: rgba(255, 255, 255, 0.04);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255,255,255,0.08);
         }
-
         .glass-card {
-          background: rgba(255, 255, 255, 0.04);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          transition: all 0.3s ease;
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 16px; transition: all 0.3s ease;
         }
         .glass-card:hover {
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(255, 255, 255, 0.15);
+          background: rgba(255,255,255,0.07);
+          border-color: rgba(255,255,255,0.15);
           transform: translateY(-2px);
           box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
-
         .scan-btn {
           background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
-          color: white;
-          border: none;
-          padding: 13px 32px;
-          border-radius: 50px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
-          letter-spacing: 0.02em;
+          color: white; border: none; padding: 13px 32px; border-radius: 50px;
+          font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+          box-shadow: 0 4px 20px rgba(139,92,246,0.4); letter-spacing: 0.02em;
         }
-        .scan-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 30px rgba(139, 92, 246, 0.6);
-        }
-        .scan-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
-
+        .scan-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139,92,246,0.6); }
+        .scan-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .pill {
-          cursor: pointer;
-          border-radius: 50px;
-          padding: 7px 18px;
-          font-size: 12px;
-          font-weight: 500;
-          transition: all 0.2s ease;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.04);
-          color: rgba(255,255,255,0.6);
+          cursor: pointer; border-radius: 50px; padding: 7px 18px; font-size: 12px;
+          font-weight: 500; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6);
         }
         .pill:hover { border-color: rgba(255,255,255,0.25); color: white; }
         .pill.active {
           background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          border-color: transparent;
-          color: white;
+          border-color: transparent; color: white;
           box-shadow: 0 4px 15px rgba(139,92,246,0.4);
         }
-
-        .tag {
-          display: inline-block;
-          padding: 3px 10px;
-          border-radius: 50px;
-          font-size: 11px;
-          font-weight: 500;
-        }
-
-        .progress-track {
-          height: 3px;
-          background: rgba(255,255,255,0.08);
-          border-radius: 2px;
-          overflow: hidden;
-          margin-top: 12px;
-        }
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #6366f1, #a855f7);
-          border-radius: 2px;
-          transition: width 0.4s ease;
-        }
-
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 500; }
+        .progress-track { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7); border-radius: 2px; transition: width 0.4s ease; }
         .blink { animation: blink 1s step-end infinite; }
         .fade { animation: fadeIn 0.4s ease; }
-
         .company-chip {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 5px 12px;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 50px;
-          font-size: 12px;
-          color: rgba(255,255,255,0.7);
-          transition: all 0.2s;
+          display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 50px; font-size: 12px; color: rgba(255,255,255,0.7); transition: all 0.2s;
         }
-        .company-chip:hover {
-          background: rgba(255,255,255,0.08);
-          color: white;
-        }
-
+        .company-chip:hover { background: rgba(255,255,255,0.08); color: white; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
       `}</style>
 
-      {/* Animated background */}
       <div className="animated-bg" />
       <div className="orb" style={{ width: 600, height: 600, top: -200, left: -200, background: "radial-gradient(circle, rgba(99,102,241,0.15), transparent)" }} />
       <div className="orb" style={{ width: 500, height: 500, bottom: -100, right: -100, background: "radial-gradient(circle, rgba(168,85,247,0.12), transparent)", animationDelay: "3s" }} />
@@ -270,7 +204,7 @@ export default function JobRadar() {
 
       <div style={{ position: "relative", zIndex: 1 }}>
 
-        {/* Hero Banner */}
+        {/* Hero */}
         <div style={{ padding: "60px 40px 50px", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 50, fontSize: 12, color: "#a78bfa", marginBottom: 24, fontWeight: 500 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", display: "inline-block" }} />
@@ -279,23 +213,14 @@ export default function JobRadar() {
           <h1 style={{ fontSize: 56, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16, background: "linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #60a5fa 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Job Radar
           </h1>
-          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.45)", marginBottom: 8, fontWeight: 400 }}>
-            Matthew Dresser · Entry & Mid-level Roles
-          </p>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.25)", marginBottom: 36 }}>
-            Scanning {COMPANIES.length} companies across Boston & Remote
-          </p>
-
+          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.45)", marginBottom: 8 }}>Matthew Dresser · Entry & Mid-level Roles</p>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.25)", marginBottom: 36 }}>Scanning {COMPANIES.length} companies · Sorted by most recent</p>
           <button className="scan-btn" onClick={runScan} disabled={loading}>
             {loading ? "Scanning " + progress + "%" : "▶ Run Scan"}
           </button>
-
           {lastScanned && !loading && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 12 }}>
-              Last scan: {lastScanned.toLocaleTimeString()}
-            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 12 }}>Last scan: {lastScanned.toLocaleTimeString()}</div>
           )}
-
           {loading && (
             <div style={{ maxWidth: 400, margin: "20px auto 0" }}>
               <div className="progress-track">
