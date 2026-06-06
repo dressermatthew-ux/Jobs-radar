@@ -4,13 +4,19 @@ export default async function handler(req, res) {
   const { company } = req.body;
 
   try {
-    const query = encodeURIComponent(`${company} jobs Boston Massachusetts remote entry level mid level`);
-    const url = `https://serpapi.com/search.json?engine=google_jobs&q=${query}&location=Boston,Massachusetts&api_key=${process.env.SERPAPI_KEY}`;
+    const query = encodeURIComponent(`${company} jobs`);
+    const url = `https://serpapi.com/search.json?engine=google_jobs&q=${query}&location=Boston%2C+Massachusetts%2C+United+States&api_key=${process.env.SERPAPI_KEY}&chips=date_posted%3Amonth`;
 
     const response = await fetch(url);
     const data = await response.json();
 
-    const jobs = (data.jobs_results || []).slice(0, 10).map(job => ({
+    console.log("SerpAPI response for", company, ":", JSON.stringify(data).slice(0, 500));
+
+    if (!data.jobs_results || data.jobs_results.length === 0) {
+      return res.status(200).json({ jobs: [], debug: "no jobs_results", error_message: data.error || "none" });
+    }
+
+    const jobs = data.jobs_results.slice(0, 10).map(job => ({
       title: job.title || "",
       company: job.company_name || company,
       location: job.location || "",
