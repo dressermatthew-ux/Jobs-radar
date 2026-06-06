@@ -15,19 +15,14 @@ export default async function handler(req, res) {
     }
 
     const EXCLUDE_TITLES = [
-      // Engineering / Technical
       "engineer", "engineering", "software", "developer", "devops", "sre",
       "infrastructure", "backend", "frontend", "fullstack", "full-stack",
       "machine learning", "ml ", "data scientist", "data science",
       "cybersecurity", "security analyst", "network", "cloud architect",
       "qa ", "quality assurance", "test automation",
-
-      // Senior / Executive
       "director", "senior director", "vp ", "vice president", "head of",
       "principal", "staff ", "distinguished", "chief ", "cto", "ceo", "coo",
       "manager", "sr.", "sr ", "senior manager", "lead ", " lead",
-
-      // Retail / Hourly / No degree required
       "cashier", "retail", "store associate", "sales associate", "barista",
       "crew member", "team member", "shift supervisor", "shift leader",
       "warehouse associate", "fulfillment associate", "picker", "packer",
@@ -38,7 +33,9 @@ export default async function handler(req, res) {
       "stylist", "salon", "beautician", "technician", "repair tech",
       "field technician", "service technician", "maintenance tech",
       "customer service representative", "call center", "chat support",
-      "seasonal", "part-time", "part time", "hourly"
+      "seasonal", "part-time", "part time", "hourly",
+      "intern", "internship", "co-op", "coop", "co op", "apprentice",
+      "fellowship", "extern", "graduate program", "rotational program"
     ];
 
     const filtered = data.jobs_results.filter(job => {
