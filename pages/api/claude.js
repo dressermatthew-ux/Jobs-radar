@@ -10,13 +10,25 @@ export default async function handler(req, res) {
     const response = await fetch(url);
     const data = await response.json();
 
-    console.log("SerpAPI response for", company, ":", JSON.stringify(data).slice(0, 500));
-
     if (!data.jobs_results || data.jobs_results.length === 0) {
       return res.status(200).json({ jobs: [], debug: "no jobs_results", error_message: data.error || "none" });
     }
 
-    const jobs = data.jobs_results.slice(0, 10).map(job => ({
+    const EXCLUDE_TITLES = [
+      "engineer", "engineering", "software", "developer", "devops", "sre",
+      "infrastructure", "backend", "frontend", "fullstack", "full-stack",
+      "machine learning", "ml ", "data scientist", "data science",
+      "director", "senior director", "vp ", "vice president", "head of",
+      "principal", "staff ", "distinguished", "chief ", "cto", "ceo", "coo",
+      "manager", "sr.", "sr ", "senior manager", "lead ", " lead"
+    ];
+
+    const filtered = data.jobs_results.filter(job => {
+      const title = (job.title || "").toLowerCase();
+      return !EXCLUDE_TITLES.some(term => title.includes(term));
+    });
+
+    const jobs = filtered.slice(0, 10).map(job => ({
       title: job.title || "",
       company: job.company_name || company,
       location: job.location || "",
