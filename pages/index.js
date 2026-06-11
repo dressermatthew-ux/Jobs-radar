@@ -21,6 +21,10 @@ const COMPANIES = [
   { name: "Staples", domain: "staples.com" },
   { name: "Dunkin", domain: "dunkindonuts.com" },
   { name: "SharkNinja", domain: "sharkninja.com" },
+  { name: "Spindrift", domain: "spindrift.com" },
+  { name: "Boston Beer Company", domain: "bostonbeer.com" },
+  { name: "Boston Celtics", domain: "celtics.com" },
+  { name: "Boston Red Sox", domain: "redsox.com" },
 ];
 
 const KEYWORDS = ["operations","analyst","program manager","project manager","supply chain","strategy","bizops","business operations","planning","process","sql","excel","stakeholder","workflow","metrics","coordinator","associate","specialist","finance","marketing","data","product","research","compliance"];
